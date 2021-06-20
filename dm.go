@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 const (
@@ -11,36 +12,40 @@ const (
 	END = "\033[0m"
 )
 
+func isPrintable(ch byte) bool {
+	return 0x20 <= ch && ch < 0x7F
+}
+
 func DmMain(args []string) {
 	for _, arg := range args {
 		var ab, err = ioutil.ReadFile(arg)
 		if err != nil {
 			log.Fatal(err)
 		}
-		count := 0
-		s := ""
+		lineIndex := 0
+		lineString := ""
 		for i, ch := range ab {
-			if count == 0 {
-				print(fmt.Sprintf("%08X |", i))
+			if lineIndex == 0 {
+				_, _ = fmt.Fprintf(os.Stdout, "%08X |", i)
 			}
-			print(fmt.Sprintf(" %02X", ch))
-			if 0x20 <= ch && ch < 0x7F {
-				s += string(ch)
+			_, _ = fmt.Fprintf(os.Stdout, " %02X", ch)
+			if isPrintable(ch) {
+				lineString += string(ch)
 			} else {
-				s += RED + "." + END
+				lineString += RED + "." + END
 			}
-			count ++
-			if count == 16 {
-				println(" |", s)
-				count = 0
-				s = ""
+			lineIndex++
+			if lineIndex == 16 {
+				_, _ = fmt.Fprintln(os.Stdout, " |", lineString)
+				lineIndex = 0
+				lineString = ""
 			}
 		}
-		if count != 0 {
-			for i := 0; i < 16 - count; i ++ {
-				print("   ")
+		if lineIndex != 0 {
+			for i := 0; i < (16 - lineIndex); i ++ {
+				_, _ = fmt.Fprint(os.Stdout, "   ")
 			}
-			println(" |", s)
+			_, _ = fmt.Fprintln(os.Stdout, " |", lineString)
 		}
 	}
 }
