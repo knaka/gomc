@@ -1,0 +1,11 @@
+#!/bin/bash
+set -o nounset -o errexit -o pipefail
+
+for os_arch in darwin/amd64 linux/amd64 windows/amd64
+do
+    export GOOS=$(echo $os_arch | cut -d'/' -f 1)
+    export GOARCH=$(echo $os_arch | cut -d'/' -f 2)
+    arch2=$(echo $os_arch | sed -e 's#/#_#')
+    echo Building for GOOS=$GOOS, GOARCH=$GOARCH
+    go build -o ~/Dropbox/arch-${arch2}/gomc cmd/gomc/main.go
+done

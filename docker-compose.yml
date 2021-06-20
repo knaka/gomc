@@ -1,0 +1,29 @@
+version: '3'
+services:
+  rdb:
+    image: postgres:13.1-alpine
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      PGDATA: /var/lib/postgresql/data/pgdata
+  ap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    stdin_open: true
+    ports:
+      - ${AP_PORT:-18080}:8080
+      - ${SSH_PORT:-10022}:22
+    volumes:
+      - .:/go/src/app
+    depends_on:
+      - rdb
+    environment:
+      CONFIG_PROFILE: local-docker
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
